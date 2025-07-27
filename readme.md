@@ -10,7 +10,7 @@
 
 * `chunking.py`: Handles the extraction and intelligent chunking of content from `.docx` files. It parses document structure, identifies headings, lists, and tables, and segments the content into meaningful chunks.
 * `embedding.py`: Manages the generation of QA pairs and their embeddings. It interacts with an LLM to create Q&A from chunks, paraphrases questions, and stores them along with their embeddings in a SQLite database (`qa.db`).
-* `qa.py`: Provides the core functionality for searching and retrieving answers. It takes a user query, generates its embedding, performs a cosine similarity search against the stored QA embeddings, and returns the most relevant answer.
+* `main.py`: Provides the core functionality for searching and retrieving answers. It takes a user query, generates its embedding, performs a cosine similarity search against the stored QA embeddings, and returns the most relevant answer.
 * `chunk/`: Directory to store the processed JSON chunks from the `.docx` files.
 * `database/`: Directory to store the `qa.db` SQLite database.
 * `doc/`: Directory where you should place your input `.docx` documents.
