@@ -58,7 +58,7 @@ def search(query, top_k=3):
         else:
             print("❌ No results found.")
     except Exception as e:
-        print(f"❌ Search error: {e}")
+        print(f"❌ SeaopenAI_generate_answerrch error: {e}")
 
 def openAI_generate_answer(user_question, results):
     """
@@ -77,7 +77,7 @@ def openAI_generate_answer(user_question, results):
             context = "\n".join(context_parts)
             system_prompt = (
                 "You are a helpful assistant for new employees. Use the following Q&A pairs as context. "
-                "If the user's question matches any context, answer based on it. "
+                "If the user's question matches one or more context, answer based on all context matching. "
                 "If not, generate a helpful answer based on the user's question. Answer in Vietnamese."
             )
             user_content = f"User question: {user_question}\nContext:\n{context}"
@@ -135,6 +135,7 @@ def get_answer(user_question, top_k=5, threshold=0.2):
                     filtered_results['metadatas'][0].append(results['metadatas'][0][i])
                     filtered_results['distances'][0].append(results['distances'][0][i])
 
+        print(filtered_results)
         # Call OpenAI API to generate an answer
         answer = openAI_generate_answer(user_question, filtered_results)
         return answer

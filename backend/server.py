@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify, Response
 import chatbot
 import tts
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 
 @app.route('/api/chatbot', methods=['POST'])
 def chatbot_search():
