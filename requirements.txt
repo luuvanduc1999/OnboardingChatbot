@@ -3,7 +3,10 @@ python-docx==1.1.2
 xmltodict
 roman
 tqdm
-sentence_transformers
+transformers
 openai
 chromadb
 flask
+torch
+IPython
+soundfile
