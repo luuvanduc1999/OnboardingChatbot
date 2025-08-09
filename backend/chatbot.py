@@ -1,4 +1,5 @@
 import os
+import json
 from openai import OpenAI
 import chromadb
 from personalized_roadmap import roadmap_manager
@@ -21,6 +22,36 @@ client = OpenAI(
 chroma_client = chromadb.PersistentClient(path="./database")
 collection = chroma_client.get_or_create_collection(name="qa_collection")
 
+
+# Smart suggestion function for chatbot
+def get_smart_suggestions(history):
+    """
+    Generate smart suggested questions based on user history using OpenAI.
+    history: List of previous user questions (strings)
+    Returns: List of suggested questions (strings)
+    """
+    try:
+        last_questions = history[-3:] if history else []
+        context_str = "\n".join([f"- {q}" for q in last_questions])
+        prompt = f"""
+Bạn là trợ lý AI cho chatbot onboarding. Dựa trên các câu hỏi người dùng đã hỏi:\n{context_str}\n\nHãy đề xuất 3-5 câu hỏi tiếp theo mà người dùng có thể quan tâm về onboarding, chính sách, quy trình, hoặc các chức năng mới. Trả về danh sách dạng JSON array.
+"""
+        response = client.chat.completions.create(
+            model="GPT-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=200,
+            temperature=0.7
+        )
+        content = response.choices[0].message.content
+        try:
+            suggestions = json.loads(content)
+            if isinstance(suggestions, list):
+                return suggestions
+        except Exception:
+            pass
+        return [content]
+    except Exception as e:
+        return ["help"]
 def get_embedding(text):
     """Get embedding from OpenAI API"""
     response = embedding_client.embeddings.create(

@@ -19,13 +19,131 @@ const ChatbotInterface = () => {
   const [isLoading, setIsLoading] = useState(false)
   const endOfMessagesRef = useRef(null)
 
-  const suggestedQuestions = [
+  // Dynamic suggested questions
+  const [suggestedQuestions, setSuggestedQuestions] = useState([
     "Tạo lộ trình cho developer",
     "Chính sách nghỉ phép như thế nào?",
     "Tạo email chào mừng",
     "Xử lý CV",
     "help"
-  ]
+  ])
+
+  // Simple keyword-based suggestion generator
+  const getFrontendSuggestions = (history) => {
+    const lastUserMsg = history.filter(m => m.type === 'user').slice(-1)[0]?.content?.toLowerCase() || '';
+    if (!lastUserMsg) return [];
+    const suggestions = [];
+    if (lastUserMsg.includes('developer') || lastUserMsg.includes('lộ trình')) {
+      suggestions.push('Gợi ý học tập cho developer');
+      suggestions.push('Các kỹ năng cần cho developer mới');
+    }
+    if (lastUserMsg.includes('email')) {
+      suggestions.push('Tạo email chào mừng');
+      suggestions.push('Tạo email nhắc nhở onboarding');
+    }
+    if (lastUserMsg.includes('cv') || lastUserMsg.includes('hồ sơ')) {
+      suggestions.push('Xử lý CV');
+      suggestions.push('Tự động điền biểu mẫu từ CV');
+    }
+    if (lastUserMsg.includes('chính sách')) {
+      suggestions.push('Chính sách nghỉ phép như thế nào?');
+      suggestions.push('Chính sách thưởng/phạt');
+    }
+    if (suggestions.length === 0) {
+      suggestions.push('help');
+    }
+    return suggestions;
+  };
+
+  // Backend suggestion API
+  const fetchBackendSuggestions = async (history) => {
+    const userQuestions = history.filter(m => m.type === 'user').map(m => m.content);
+    try {
+      const response = await fetch('http://127.0.0.1:5001/api/chatbot/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ history: userQuestions })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return Array.isArray(data.suggestions) ? data.suggestions : [];
+      }
+    } catch (e) {
+      // fallback silently
+    }
+    return [];
+  };
+
+  // Update suggestions when messages change
+  useEffect(() => {
+    const updateSuggestions = async () => {
+      // Only load backend suggestions if user has sent at least one question
+      const userQuestions = messages.filter(m => m.type === 'user');
+      if (userQuestions.length === 0) {
+        setSuggestedQuestions([
+          "Tạo lộ trình cho developer",
+          "Chính sách nghỉ phép như thế nào?",
+          "Tạo email chào mừng",
+          "Xử lý CV",
+          "help"
+        ]);
+        return;
+      }
+      // Get frontend suggestions
+      const frontend = getFrontendSuggestions(messages);
+      // Get backend suggestions
+      const backend = await fetchBackendSuggestions(messages);
+      // Ensure backend suggestions are split if returned as a single stringified array
+      let processedBackend = [];
+      backend.forEach(item => {
+        if (typeof item === 'string') {
+          // Try to parse as JSON array
+          try {
+            const arr = JSON.parse(item);
+            if (Array.isArray(arr)) {
+              processedBackend.push(...arr);
+            } else {
+              processedBackend.push(item);
+            }
+          } catch {
+            // If not JSON, try to split by line breaks or numbered list
+            const split = item.split(/\n|\r|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
+            if (split.length > 1) {
+              processedBackend.push(...split);
+            } else {
+              processedBackend.push(item);
+            }
+          }
+        } else {
+          processedBackend.push(item);
+        }
+      });
+      // Merge and deduplicate, remove empty array strings
+      const merged = Array.from(new Set([
+        ...frontend,
+        ...processedBackend.filter(item => {
+          if (typeof item !== 'string') return true;
+          const trimmed = item.trim().toLowerCase();
+          // Remove '[ ]', '[]', or empty array-like strings, and any item containing 'json'
+          if (trimmed === '[ ]' || trimmed === '[]') return false;
+          if (trimmed.includes('json')) return false;
+          if (trimmed.includes('[')) return false;
+          if (trimmed.includes(']')) return false;
+          if (trimmed.includes('```')) return false;
+          return true;
+        })
+      ]));
+      const limited = merged.slice(0, 3);
+      setSuggestedQuestions(limited.length ? limited : [
+        "Tạo lộ trình cho developer",
+        "Chính sách nghỉ phép như thế nào?",
+        "Tạo email chào mừng",
+        "Xử lý CV",
+        "help"
+      ]);
+    };
+    updateSuggestions();
+  }, [messages]);
 
   // Auto scroll xuống cuối khi có tin nhắn mới
   useEffect(() => {
@@ -115,21 +233,36 @@ const ChatbotInterface = () => {
 
       <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
         {/* Suggested Questions */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2">
           <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
             <Lightbulb className="h-4 w-4" />
             <span>Gợi ý câu hỏi:</span>
           </div>
-          {suggestedQuestions.map((question, index) => (
-            <Badge
-              key={index}
-              variant="outline"
-              className="cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"
-              onClick={() => sendMessage(question)}
-            >
-              {question}
-            </Badge>
-          ))}
+          <div className="flex flex-wrap gap-2">
+            {suggestedQuestions.map((question, index) => {
+              // Remove leading/trailing quotes and commas
+              let clean = question;
+              if (typeof clean === 'string') {
+                clean = clean.trim();
+                
+                clean = clean.replace(/,$/, '').trim();
+                // Remove all leading/trailing double quotes
+                while (clean.startsWith('"')) clean = clean.slice(1);
+                while (clean.endsWith('"')) clean = clean.slice(0, -1);
+
+              }
+              return (
+                <Badge
+                  key={index}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors px-3 py-2 text-base"
+                  onClick={() => sendMessage(clean)}
+                >
+                  {clean}
+                </Badge>
+              );
+            })}
+          </div>
         </div>
 
         {/* Messages */}

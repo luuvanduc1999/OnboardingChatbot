@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify, Response
+import json
+from openai import OpenAI
 import chatbot
 import tts
 from personalized_roadmap import roadmap_manager
@@ -11,6 +13,18 @@ import tempfile
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+CORS(app)
+
+@app.route('/api/chatbot/suggestions', methods=['POST'])
+def chatbot_suggestions():
+    """Trả về gợi ý câu hỏi dựa trên lịch sử câu hỏi của user"""
+    try:
+        data = request.json
+        history = data.get('history', [])
+        suggestions = chatbot.get_smart_suggestions(history)
+        return jsonify({"suggestions": suggestions})
+    except Exception as e:
+        return jsonify({"suggestions": ["help"]})
 CORS(app)
 
 # Cấu hình upload file
