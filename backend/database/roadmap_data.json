@@ -1,0 +1,124 @@
+{
+  "positions": {
+    "developer": {
+      "name": "Lập trình viên",
+      "documents": [
+        "Hướng dẫn coding standards",
+        "Git workflow và best practices",
+        "Tài liệu API documentation",
+        "Security guidelines cho developers"
+      ],
+      "courses": [
+        "Khóa học Clean Code",
+        "Design Patterns trong thực tế",
+        "Testing và TDD",
+        "DevOps cơ bản"
+      ],
+      "timeline": "4 tuần",
+      "milestones": [
+        "Tuần 1: Làm quen với môi trường và tools",
+        "Tuần 2: Học coding standards và Git workflow",
+        "Tuần 3: Thực hành với dự án nhỏ",
+        "Tuần 4: Review code và feedback"
+      ]
+    },
+    "designer": {
+      "name": "Thiết kế UI/UX",
+      "documents": [
+        "Design system và brand guidelines",
+        "User research methodology",
+        "Accessibility standards",
+        "Design tools và workflows"
+      ],
+      "courses": [
+        "Figma advanced techniques",
+        "User Experience Design",
+        "Design thinking workshop",
+        "Prototyping và testing"
+      ],
+      "timeline": "3 tuần",
+      "milestones": [
+        "Tuần 1: Làm quen với design system",
+        "Tuần 2: Thực hành với dự án thực tế",
+        "Tuần 3: Present và nhận feedback"
+      ]
+    },
+    "marketing": {
+      "name": "Marketing",
+      "documents": [
+        "Brand guidelines và messaging",
+        "Marketing strategy overview",
+        "Social media guidelines",
+        "Analytics và reporting tools"
+      ],
+      "courses": [
+        "Digital Marketing fundamentals",
+        "Content Marketing strategy",
+        "SEO và SEM basics",
+        "Marketing automation"
+      ],
+      "timeline": "3 tuần",
+      "milestones": [
+        "Tuần 1: Hiểu về brand và target audience",
+        "Tuần 2: Tạo content plan đầu tiên",
+        "Tuần 3: Launch campaign nhỏ và đo lường"
+      ]
+    },
+    "hr": {
+      "name": "Nhân sự",
+      "documents": [
+        "Quy chế lao động",
+        "Quy trình tuyển dụng",
+        "Performance management",
+        "Employee handbook"
+      ],
+      "courses": [
+        "HR fundamentals",
+        "Recruitment best practices",
+        "Employee engagement",
+        "Labor law updates"
+      ],
+      "timeline": "2 tuần",
+      "milestones": [
+        "Tuần 1: Nắm vững quy trình và chính sách",
+        "Tuần 2: Thực hành với case studies"
+      ]
+    },
+    "sales": {
+      "name": "Kinh doanh",
+      "documents": [
+        "Sales process và methodology",
+        "Product knowledge base",
+        "Customer personas",
+        "CRM system guide"
+      ],
+      "courses": [
+        "Sales fundamentals",
+        "Negotiation skills",
+        "Customer relationship management",
+        "Product training"
+      ],
+      "timeline": "4 tuần",
+      "milestones": [
+        "Tuần 1: Học về sản phẩm và khách hàng",
+        "Tuần 2: Shadowing senior sales",
+        "Tuần 3: Thực hành sales calls",
+        "Tuần 4: Độc lập handle prospects"
+      ]
+    }
+  },
+  "general_onboarding": {
+    "documents": [
+      "Company handbook",
+      "Organizational chart",
+      "IT security policies",
+      "Benefits và compensation"
+    ],
+    "courses": [
+      "Company culture orientation",
+      "IT security training",
+      "Communication tools training",
+      "Workplace safety"
+    ]
+  }
+}

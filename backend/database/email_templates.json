@@ -1,0 +1,25 @@
+{
+  "welcome_email": {
+    "subject_template": "Chào mừng {employee_name} đến với {company_name}!",
+    "body_template": "\nChào {employee_name},\n\nChúng tôi rất vui mừng chào đón bạn gia nhập đội ngũ {company_name} với vai trò {position}!\n\nThông tin cơ bản:\n- Ngày bắt đầu: {start_date}\n- Phòng ban: {department}\n- Người quản lý trực tiếp: {manager_name}\n- Email công ty: {company_email}\n\nTrong những ngày đầu tiên, bạn sẽ:\n1. Tham gia buổi orientation về văn hóa công ty\n2. Được cấp các tài khoản và thiết bị cần thiết\n3. Gặp gỡ các đồng nghiệp trong team\n4. Bắt đầu chương trình onboarding cá nhân hóa\n\nNếu có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với HR hoặc manager của bạn.\n\nChúc bạn có những trải nghiệm tuyệt vời tại {company_name}!\n\nTrân trọng,\nĐội ngũ HR\n{company_name}\n                    ",
+    "variables": [
+      "employee_name",
+      "company_name",
+      "position",
+      "start_date",
+      "department",
+      "manager_name",
+      "company_email"
+    ]
+  },
+  "reminder_email": {
+    "subject_template": "Nhắc nhở: Hoàn thành các bước onboarding",
+    "body_template": "\nChào {employee_name},\n\nHy vọng bạn đang có những ngày đầu tiên tuyệt vời tại {company_name}!\n\nChúng tôi muốn nhắc nhở bạn về một số bước onboarding cần hoàn thành:\n\n{pending_tasks}\n\nVui lòng hoàn thành các bước này trước {deadline} để đảm bảo quá trình onboarding diễn ra suôn sẻ.\n\nNếu cần hỗ trợ, hãy liên hệ với chúng tôi.\n\nTrân trọng,\nĐội ngũ HR\n                    ",
+    "variables": [
+      "employee_name",
+      "company_name",
+      "pending_tasks",
+      "deadline"
+    ]
+  }
+}

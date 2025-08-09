@@ -4,6 +4,8 @@ import os
 import json
 from pathlib import Path
 from tqdm import tqdm
+from dotenv import load_dotenv
+load_dotenv()
 
 embedding_client = OpenAI(
     base_url="https://aiportalapi.stu-platform.live/jpe",

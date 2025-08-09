@@ -1,16 +1,19 @@
 import os
 from openai import OpenAI
 import chromadb
+from personalized_roadmap import roadmap_manager
+from content_generator import content_generator
+from document_extractor import document_extractor
 
 embedding_client = OpenAI(
     base_url="https://aiportalapi.stu-platform.live/jpe",
-    api_key= os.environ.get("EMBEDDING_API_KEY")
+    api_key= "sk-AtDMlHQInyQArPQ_ZyvFBA"
 )
 EMBEDDING_MODEL = "text-embedding-3-small"
 
 client = OpenAI(
     base_url="https://aiportalapi.stu-platform.live/jpe",
-    api_key= os.environ.get("OPENAI_API_KEY")
+    api_key= "sk-xvI5gYSbiDQ3c4blptwn0A"
 )
 
 
@@ -108,8 +111,111 @@ def get_answer(user_question, top_k=5, threshold=0.2):
     """
     Find the most similar question in ChromaDB to the user's question.
     Generate answer using OpenAI API based on retrieved context.
+    Also handle special commands for new features.
     """
     try:
+        # Kiểm tra các lệnh đặc biệt cho chức năng mới
+        user_question_lower = user_question.lower().strip()
+        
+        # Lệnh tạo lộ trình onboarding
+        if any(keyword in user_question_lower for keyword in ['lộ trình', 'roadmap', 'onboarding', 'học tập']):
+            if any(keyword in user_question_lower for keyword in ['tạo', 'gợi ý', 'đề xuất']):
+                # Trích xuất vị trí từ câu hỏi
+                positions = roadmap_manager.get_available_positions()
+                for pos in positions:
+                    if pos in user_question_lower:
+                        roadmap = roadmap_manager.generate_personalized_roadmap(pos)
+                        return f"🎯 **Lộ trình onboarding cho vị trí {pos}:**\n\n{roadmap}"
+                
+                return """🎯 **Tạo lộ trình onboarding cá nhân hóa**
+
+Tôi có thể tạo lộ trình onboarding cho các vị trí sau:
+- Developer (Lập trình viên)
+- Designer (Thiết kế UI/UX)  
+- Marketing
+- HR (Nhân sự)
+- Sales (Kinh doanh)
+
+Hãy cho tôi biết vị trí bạn quan tâm, ví dụ: "Tạo lộ trình cho developer" hoặc "Gợi ý học tập cho marketing"."""
+
+        # Lệnh tạo nội dung tự động
+        if any(keyword in user_question_lower for keyword in ['email', 'tóm tắt', 'câu hỏi', 'checklist']):
+            if 'email chào mừng' in user_question_lower or 'welcome email' in user_question_lower:
+                return """📧 **Tạo email chào mừng tự động**
+
+Tôi có thể tạo email chào mừng cho nhân viên mới. Cần thông tin:
+- Tên nhân viên
+- Vị trí công việc
+- Ngày bắt đầu
+- Phòng ban
+- Tên quản lý
+
+Sử dụng API endpoint: `/api/content/welcome-email`"""
+
+            if 'tóm tắt' in user_question_lower:
+                return """📄 **Tóm tắt tài liệu tự động**
+
+Tôi có thể tóm tắt tài liệu theo các kiểu:
+- Tóm tắt tổng quan (general)
+- Điểm chính (key_points)  
+- Hành động cần thực hiện (action_items)
+
+Sử dụng API endpoint: `/api/content/summarize`"""
+
+            if 'câu hỏi' in user_question_lower and 'đào tạo' in user_question_lower:
+                return """❓ **Sinh câu hỏi đào tạo tự động**
+
+Tôi có thể tạo câu hỏi đào tạo từ nội dung:
+- Trắc nghiệm (multiple_choice)
+- Đúng/Sai (true_false)
+- Hỗn hợp (mixed)
+
+Sử dụng API endpoint: `/api/content/training-questions`"""
+
+        # Lệnh trích xuất thông tin
+        if any(keyword in user_question_lower for keyword in ['cv', 'hồ sơ', 'trích xuất', 'tự động điền']):
+            return """🔍 **Trích xuất thông tin tự động**
+
+Tôi có thể xử lý các loại tài liệu:
+- CV/Resume
+- CMND/CCCD  
+- Bằng cấp
+- Tài liệu khác
+
+Và tự động điền vào các biểu mẫu:
+- Thông tin nhân viên
+- Thông tin hợp đồng
+
+Sử dụng API endpoints:
+- `/api/extract/upload` - Upload file
+- `/api/extract/process-complete` - Xử lý hoàn chỉnh"""
+
+        # Lệnh trợ giúp
+        if any(keyword in user_question_lower for keyword in ['help', 'trợ giúp', 'hướng dẫn', 'chức năng']):
+            return """🤖 **Chatbot Onboarding - Hướng dẫn sử dụng**
+
+**Chức năng cơ bản:**
+- Hỏi đáp về chính sách, quy trình, phúc lợi công ty
+
+**Chức năng mới:**
+
+🎯 **1. Lộ trình onboarding cá nhân hóa**
+- "Tạo lộ trình cho developer"
+- "Gợi ý học tập cho marketing"
+
+📧 **2. Tạo nội dung tự động**  
+- "Tạo email chào mừng"
+- "Tóm tắt tài liệu"
+- "Sinh câu hỏi đào tạo"
+
+🔍 **3. Trích xuất thông tin tự động**
+- "Xử lý CV"
+- "Trích xuất thông tin từ giấy tờ"
+- "Tự động điền biểu mẫu"
+
+Hãy thử các lệnh trên hoặc hỏi bất kỳ câu hỏi nào về onboarding!"""
+
+        # Xử lý câu hỏi thông thường
         # Check if collection is empty
         if collection.count() == 0:
             print("❌ Database is empty. Please run the embedding script first.")
@@ -142,6 +248,7 @@ def get_answer(user_question, top_k=5, threshold=0.2):
         
     except Exception as e:
         print(f"❌ Error: {e}")
+        return f"❌ Đã xảy ra lỗi: {e}"
 
 def show_stats():
     """Show database statistics"""
