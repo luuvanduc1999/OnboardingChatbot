@@ -1,0 +1,114 @@
+{
+  "employee_info_form": {
+    "name": "Thông tin nhân viên",
+    "fields": [
+      {
+        "field": "full_name",
+        "label": "Họ và tên",
+        "type": "text",
+        "required": true
+      },
+      {
+        "field": "email",
+        "label": "Email",
+        "type": "email",
+        "required": true
+      },
+      {
+        "field": "phone",
+        "label": "Số điện thoại",
+        "type": "text",
+        "required": true
+      },
+      {
+        "field": "address",
+        "label": "Địa chỉ",
+        "type": "text",
+        "required": false
+      },
+      {
+        "field": "birth_date",
+        "label": "Ngày sinh",
+        "type": "date",
+        "required": false
+      },
+      {
+        "field": "id_number",
+        "label": "CMND/CCCD",
+        "type": "text",
+        "required": true
+      },
+      {
+        "field": "education",
+        "label": "Trình độ học vấn",
+        "type": "text",
+        "required": false
+      },
+      {
+        "field": "experience",
+        "label": "Kinh nghiệm làm việc",
+        "type": "text",
+        "required": false
+      },
+      {
+        "field": "skills",
+        "label": "Kỹ năng",
+        "type": "text",
+        "required": false
+      },
+      {
+        "field": "position_applied",
+        "label": "Vị trí ứng tuyển",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  "contract_form": {
+    "name": "Thông tin hợp đồng",
+    "fields": [
+      {
+        "field": "employee_name",
+        "label": "Tên nhân viên",
+        "type": "text",
+        "required": true
+      },
+      {
+        "field": "position",
+        "label": "Chức vụ",
+        "type": "text",
+        "required": true
+      },
+      {
+        "field": "department",
+        "label": "Phòng ban",
+        "type": "text",
+        "required": true
+      },
+      {
+        "field": "start_date",
+        "label": "Ngày bắt đầu",
+        "type": "date",
+        "required": true
+      },
+      {
+        "field": "salary",
+        "label": "Mức lương",
+        "type": "number",
+        "required": true
+      },
+      {
+        "field": "contract_type",
+        "label": "Loại hợp đồng",
+        "type": "text",
+        "required": true
+      },
+      {
+        "field": "probation_period",
+        "label": "Thời gian thử việc",
+        "type": "text",
+        "required": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+    // Ẩn file/thư mục rác trong Explorer
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.cache": true,
+        "**/.next": true,
+        "**/out": true,
+        "**/.env": true,
+        "**/.env.*": true,
+        "**/*.log": true
+    },
+
+    // Bỏ qua khi tìm kiếm
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.cache": true,
+        "**/.next": true,
+        "**/out": true,
+        "**/.env": true,
+        "**/.env.*": true,
+        "**/*.log": true
+    },
+
+    // Ẩn trong Source Control
+    "git.exclude": [
+        "node_modules",
+        "dist",
+        "build",
+        ".cache",
+        ".next",
+        "out",
+        ".env",
+        ".env.*",
+        "*.log"
+    ]
+}
