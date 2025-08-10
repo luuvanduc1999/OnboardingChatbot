@@ -167,7 +167,7 @@ function App() {
               </div>
             </div>
             <p className="text-sm">
-              © 2024 Chatbot Onboarding System. Được phát triển với ❤️ để hỗ trợ nhân viên mới.
+              © 2025 Chatbot Onboarding System. Được phát triển với ❤️ để hỗ trợ nhân viên mới.
             </p>
           </footer>
         </main>

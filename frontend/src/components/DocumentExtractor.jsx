@@ -72,10 +72,47 @@ const DocumentExtractor = () => {
 
       if (!response.ok) throw new Error('Network response was not ok')
       const data = await response.json()
-      setExtractedData(data.extracted_info || {})
+      const extracted = data?.result?.extracted_data || {};
+      setExtractedData(extracted)
+
+      function getPositionApplied(experience = []) {
+        if (!experience.length) return '';
+      
+        // Ưu tiên job hiện tại
+        const currentJob = experience.find(e =>
+          e.duration?.toLowerCase().includes('nay') ||
+          e.duration?.toLowerCase().includes('present')
+        );
+      
+        if (currentJob) return currentJob.position || '';
+      
+        // Nếu không có job hiện tại thì lấy job mới nhất (cuối danh sách)
+        return experience.slice(-1)[0]?.position || '';
+      }
+
+      function convertToISO(dateStr) {
+        const [day, month, year] = dateStr.split('/');
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
       
       // Auto-fill form with extracted data
-      setFormData(data.extracted_info || {})
+      setFormData({
+        full_name: extracted.personal_info?.full_name || '',
+        email: extracted.personal_info?.email || '',
+        phone: extracted.personal_info?.phone || '',
+        address: extracted.personal_info?.address || '',
+        date_of_birth: extracted.personal_info?.birth_date
+        ? convertToISO(extracted.personal_info.birth_date)
+        : '',
+        id_number: extracted.personal_info?.id_number || '',
+        education: extracted.education?.map(e => `${e.degree} - ${e.school}`).join(', ') || '',
+        experience: extracted.experience?.map(e => `${e.position} tại ${e.company}`).join('\n') || '',
+        skills: [
+          ...(extracted.skills?.technical || []),
+          ...(extracted.skills?.languages || [])
+        ].join(', '),
+        position_applied: getPositionApplied(extracted.experience)
+      });
       setActiveExtractTab('form')
     } catch (error) {
       console.error('Error:', error)
