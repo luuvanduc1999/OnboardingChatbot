@@ -37,11 +37,26 @@ const DocumentExtractor = () => {
     { key: 'position_applied', label: 'Vị trí ứng tuyển', type: 'text' }
   ]
 
+  const allowedFileTypes = [
+    'application/pdf',        // PDF
+    'application/msword',     // DOC
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+    'text/plain',             // TXT
+    'image/jpeg',             // JPG/JPEG
+    'image/png'               // PNG
+  ];
+
   const handleFileSelect = (event) => {
-    const file = event.target.files[0]
-    if (file) {
-      setSelectedFile(file)
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Kiểm tra định dạng file
+    if (!allowedFileTypes.includes(file.type)) {
+      alert(`Định dạng tệp không hợp lệ: ${file.name}`);
+      return;
     }
+
+    setSelectedFile(file);
   }
 
   const handleDragOver = (event) => {
@@ -49,11 +64,17 @@ const DocumentExtractor = () => {
   }
 
   const handleDrop = (event) => {
-    event.preventDefault()
-    const file = event.dataTransfer.files[0]
-    if (file) {
-      setSelectedFile(file)
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (!file) return;
+
+    // Kiểm tra định dạng file
+    if (!allowedFileTypes.includes(file.type)) {
+      alert(`Định dạng tệp không hợp lệ: ${file.name}`);
+      return;
     }
+
+    setSelectedFile(file);
   }
 
   const extractFromDocument = async () => {
@@ -72,6 +93,13 @@ const DocumentExtractor = () => {
 
       if (!response.ok) throw new Error('Network response was not ok')
       const data = await response.json()
+      if (data?.result?.error) {
+        const errorMessage = data.result.error;
+        setExtractedData({ error: errorMessage });
+        alert(`Có lỗi khi trích xuất: ${errorMessage}`);
+        setIsLoading(false);
+        return; // dừng hàm, không fill form
+      }
       const extracted = data?.result?.extracted_data || {};
       setExtractedData(extracted)
 
