@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, Response
 import json
+import re
 from openai import OpenAI
 import chatbot
 import tts
@@ -45,11 +46,28 @@ def chatbot_search():
     query = data.get('question', '')
     #return sample mock message
     if not query:
-        return jsonify({"error": "No query provided"}), 400
+        return Response(
+            json.dumps({"error": "No query provided"}, ensure_ascii=False),
+            mimetype='application/json; charset=utf-8',
+            status=400
+        )
+
+    # Lấy câu trả lời từ chatbot
     get_answer = chatbot.get_answer(query, top_k=5, threshold=0.2)
-    
-    response = {"response": get_answer  }
-    return jsonify(response)
+
+    # Chuyển về string UTF-8, bỏ ký tự không decode được
+    if isinstance(get_answer, str):
+        answer_text = get_answer.encode('utf-8', errors='ignore').decode('utf-8', errors='ignore')
+    else:
+        answer_text = str(get_answer)
+
+    # Loại bỏ ###, #### và **
+    clean_text = re.sub(r'#+\s*', '', answer_text)
+    clean_text = re.sub(r'\*\*', '', clean_text)
+
+    # Trả JSON UTF-8 chuẩn
+    response_json = json.dumps({"response": clean_text}, ensure_ascii=False)
+    return Response(response_json, mimetype='application/json; charset=utf-8')
 
 @app.route('/api/tts', methods=['POST'])
 def tts_endpoint():
