@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { ScrollArea } from '@/components/ui/scroll-area.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
-import { Send, Bot, User, Loader2, MessageSquare, Lightbulb, Volume2, VolumeX } from 'lucide-react'
+import { Send, Bot, User, Loader2, MessageSquare, Lightbulb, Volume2, VolumeX, Mic, Square } from 'lucide-react' // thêm Mic, Square
 
 const ChatbotInterface = () => {
   const [messages, setMessages] = useState([
@@ -22,6 +22,11 @@ const ChatbotInterface = () => {
   // TTS state
   const [playingId, setPlayingId] = useState(null)
   const audioRef = useRef(null)
+
+  // STT state
+  const [isRecording, setIsRecording] = useState(false)
+  const mediaRecorderRef = useRef(null)
+  const audioChunksRef = useRef([])
 
   // Dynamic suggested questions
   const [suggestedQuestions, setSuggestedQuestions] = useState([
@@ -245,6 +250,51 @@ const ChatbotInterface = () => {
     }
   }
 
+  // ===== Thêm STT =====
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      audioChunksRef.current = []
+      mediaRecorderRef.current = new MediaRecorder(stream)
+      mediaRecorderRef.current.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data)
+        }
+      }
+      mediaRecorderRef.current.onstop = handleStopRecording
+      mediaRecorderRef.current.start()
+      setIsRecording(true)
+    } catch (err) {
+      console.error("Microphone access denied:", err)
+    }
+  }
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop()
+    setIsRecording(false)
+  }
+
+  const handleStopRecording = async () => {
+    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+    const formData = new FormData()
+    formData.append('audio', audioBlob, 'recording.webm')
+
+    try {
+      const res = await fetch('http://127.0.0.1:5001/api/stt', {
+        method: 'POST',
+        body: formData
+      })
+      if (!res.ok) throw new Error("STT API error")
+      const data = await res.json()
+      if (data.text) {
+        setInputValue(data.text)
+      }
+    } catch (err) {
+      console.error("STT error:", err)
+    }
+  }
+  // ====================
+
   return (
     <div className="h-[600px] flex flex-col">
       <CardHeader className="pb-4">
@@ -341,6 +391,14 @@ const ChatbotInterface = () => {
             disabled={isLoading}
             className="flex-1"
           />
+          {/* Nút micro */}
+          <Button
+            type="button"
+            onClick={isRecording ? stopRecording : startRecording}
+            className={isRecording ? "bg-red-600 hover:bg-red-700" : "bg-gray-500 hover:bg-gray-600"}
+          >
+            {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
           <Button
             onClick={() => sendMessage()}
             disabled={isLoading || !inputValue.trim()}
