@@ -27,7 +27,7 @@ try:
 except ImportError:
     print("Warning: OCR libraries not installed.")
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 
 # Khởi tạo OpenAI client
