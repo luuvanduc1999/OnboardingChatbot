@@ -258,33 +258,7 @@ const ChatbotInterface = () => {
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-            <Lightbulb className="h-4 w-4" />
-            <span>Gợi ý câu hỏi:</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {suggestedQuestions.map((question, index) => {
-              let clean = question;
-              if (typeof clean === 'string') {
-                clean = clean.trim();
-                clean = clean.replace(/,$/, '').trim();
-                while (clean.startsWith('"')) clean = clean.slice(1);
-                while (clean.endsWith('"')) clean = clean.slice(0, -1);
-              }
-              return (
-                <Badge
-                  key={index}
-                  variant="outline"
-                  className="cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors px-3 py-2 text-base"
-                  onClick={() => sendMessage(clean)}
-                >
-                  {clean}
-                </Badge>
-              );
-            })}
-          </div>
-        </div>
+
 
         <div className="flex-1 min-h-0">
           <ScrollArea className="h-full pr-4">
@@ -378,6 +352,34 @@ const ChatbotInterface = () => {
               <Send className="h-4 w-4" />
             )}
           </Button>
+        </div>
+
+                <div className="flex flex-col gap-2">
+          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+            <Lightbulb className="h-4 w-4" />
+            <span>Gợi ý câu hỏi:</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {suggestedQuestions.map((question, index) => {
+              let clean = question;
+              if (typeof clean === 'string') {
+                clean = clean.trim();
+                clean = clean.replace(/,$/, '').trim();
+                while (clean.startsWith('"')) clean = clean.slice(1);
+                while (clean.endsWith('"')) clean = clean.slice(0, -1);
+              }
+              return (
+                <Badge
+                  key={index}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors px-3 py-2 text-base"
+                  onClick={() => sendMessage(clean)}
+                >
+                  {clean}
+                </Badge>
+              );
+            })}
+          </div>
         </div>
       </CardContent>
     </div>
