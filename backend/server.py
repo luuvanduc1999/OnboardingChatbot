@@ -9,6 +9,7 @@ from document_extractor import document_extractor
 from flask_cors import CORS
 from datetime import datetime
 import os
+from stt import transcribe, STT_AVAILABLE
 import tempfile
 from werkzeug.utils import secure_filename
 
@@ -71,6 +72,26 @@ def tts_endpoint():
 
     except Exception as e:
         return jsonify({"error": f"TTS generation failed: {str(e)}"}), 500
+
+@app.route("/api/stt", methods=["POST"])
+def api_stt():
+    if not STT_AVAILABLE:
+        return jsonify({"error": "STT model not available"}), 500
+
+    if "audio" not in request.files:
+        return jsonify({"error": "No audio file provided"}), 400
+
+    audio_file = request.files["audio"]
+
+    # Lưu file tạm thời
+    tmp_path = tempfile.NamedTemporaryFile(delete=False, suffix=".wav").name
+    audio_file.save(tmp_path)
+
+    try:
+        text = transcribe(tmp_path)
+        return jsonify({"text": text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Endpoints cho lộ trình onboarding cá nhân hóa
 @app.route('/api/roadmap/positions', methods=['GET'])
