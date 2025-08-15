@@ -5,6 +5,7 @@ import chromadb
 from personalized_roadmap import roadmap_manager
 from content_generator import content_generator
 from document_extractor import document_extractor
+import random
 
 embedding_client = OpenAI(
     base_url="https://aiportalapi.stu-platform.live/jpe",
@@ -26,31 +27,53 @@ collection = chroma_client.get_or_create_collection(name="qa_collection")
 # Smart suggestion function for chatbot
 def get_smart_suggestions(history):
     """
-    Generate smart suggested questions based on user history using OpenAI.
+    Generate smart suggested questions based on user history using RAG.
+    If history is null/empty, return only "help".
+    Otherwise, use RAG to find relevant questions based on history.
     history: List of previous user questions (strings)
     Returns: List of suggested questions (strings)
     """
     try:
-        last_questions = history[-3:] if history else []
-        context_str = "\n".join([f"- {q}" for q in last_questions])
-        prompt = f"""
-Bạn là trợ lý AI cho chatbot onboarding. Dựa trên các câu hỏi người dùng đã hỏi:\n{context_str}\n\nHãy đề xuất 3-5 câu hỏi tiếp theo mà người dùng có thể quan tâm về onboarding, chính sách, quy trình, hoặc các chức năng mới. Trả về danh sách dạng JSON array.
-"""
-        response = client.chat.completions.create(
-            model="GPT-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=200,
-            temperature=0.7
-        )
-        content = response.choices[0].message.content
-        try:
-            suggestions = json.loads(content)
-            if isinstance(suggestions, list):
-                return suggestions
-        except Exception:
-            pass
-        return [content]
+        # If history is null or empty, return only help
+        if not history:
+            return ["help"]
+        
+        # Use RAG approach: search for relevant content based on recent questions
+        last_questions = history[-3:] if len(history) >= 3 else history
+        
+        # Check if collection is empty
+        if collection.count() == 0:
+            return ["help"]
+        
+        # Get relevant documents based on recent questions
+        relevant_docs = []
+        for question in last_questions:
+            try:
+                query_embedding = get_embedding(question)
+                results = collection.query(
+                    query_embeddings=[query_embedding],
+                    n_results=15,  # Get top 2 relevant docs per question
+                    include=["documents", "metadatas"]
+                )
+                if results['documents'][0]:
+                    for i, doc in enumerate(results['documents'][0]):
+                        relevant_docs.append({
+                            'question': doc,
+                            'answer': results['metadatas'][0][i]['answer']
+                        })
+            except Exception:
+                continue
+        
+        # If no relevant docs found, return help
+        if not relevant_docs:
+            return ["help"]
+        
+        listQuestion = [doc['question'] for doc in relevant_docs]
+
+        # return random 2 questions
+        return random.sample(listQuestion, 2)
     except Exception as e:
+        print(e)
         return ["help"]
 def get_embedding(text):
     """Get embedding from OpenAI API"""
