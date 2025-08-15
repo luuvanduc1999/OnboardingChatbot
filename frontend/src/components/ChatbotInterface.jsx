@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { ScrollArea } from '@/components/ui/scroll-area.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
-import { Send, Bot, User, Loader2, MessageSquare, Lightbulb } from 'lucide-react'
+import { Send, Bot, User, Loader2, MessageSquare, Lightbulb, Volume2, VolumeX } from 'lucide-react'
 
 const ChatbotInterface = () => {
   const [messages, setMessages] = useState([
@@ -19,6 +19,10 @@ const ChatbotInterface = () => {
   const [isLoading, setIsLoading] = useState(false)
   const endOfMessagesRef = useRef(null)
 
+  // TTS state
+  const [playingId, setPlayingId] = useState(null)
+  const audioRef = useRef(null)
+
   // Dynamic suggested questions
   const [suggestedQuestions, setSuggestedQuestions] = useState([
     "Tạo lộ trình cho developer",
@@ -28,7 +32,6 @@ const ChatbotInterface = () => {
     "help"
   ])
 
-  // Simple keyword-based suggestion generator
   const getFrontendSuggestions = (history) => {
     const lastUserMsg = history.filter(m => m.type === 'user').slice(-1)[0]?.content?.toLowerCase() || '';
     if (!lastUserMsg) return [];
@@ -55,7 +58,6 @@ const ChatbotInterface = () => {
     return suggestions;
   };
 
-  // Backend suggestion API
   const fetchBackendSuggestions = async (history) => {
     const userQuestions = history.filter(m => m.type === 'user').map(m => m.content);
     try {
@@ -68,16 +70,12 @@ const ChatbotInterface = () => {
         const data = await response.json();
         return Array.isArray(data.suggestions) ? data.suggestions : [];
       }
-    } catch (e) {
-      // fallback silently
-    }
+    } catch (e) {}
     return [];
   };
 
-  // Update suggestions when messages change
   useEffect(() => {
     const updateSuggestions = async () => {
-      // Only load backend suggestions if user has sent at least one question
       const userQuestions = messages.filter(m => m.type === 'user');
       if (userQuestions.length === 0) {
         setSuggestedQuestions([
@@ -89,15 +87,12 @@ const ChatbotInterface = () => {
         ]);
         return;
       }
-      // Get frontend suggestions
       const frontend = getFrontendSuggestions(messages);
-      // Get backend suggestions
       const backend = await fetchBackendSuggestions(messages);
-      // Ensure backend suggestions are split if returned as a single stringified array
+
       let processedBackend = [];
       backend.forEach(item => {
         if (typeof item === 'string') {
-          // Try to parse as JSON array
           try {
             const arr = JSON.parse(item);
             if (Array.isArray(arr)) {
@@ -106,7 +101,6 @@ const ChatbotInterface = () => {
               processedBackend.push(item);
             }
           } catch {
-            // If not JSON, try to split by line breaks or numbered list
             const split = item.split(/\n|\r|\d+\.\s+/).map(s => s.trim()).filter(Boolean);
             if (split.length > 1) {
               processedBackend.push(...split);
@@ -118,13 +112,12 @@ const ChatbotInterface = () => {
           processedBackend.push(item);
         }
       });
-      // Merge and deduplicate, remove empty array strings
+
       const merged = Array.from(new Set([
         ...frontend,
         ...processedBackend.filter(item => {
           if (typeof item !== 'string') return true;
           const trimmed = item.trim().toLowerCase();
-          // Remove '[ ]', '[]', or empty array-like strings, and any item containing 'json'
           if (trimmed === '[ ]' || trimmed === '[]') return false;
           if (trimmed.includes('json')) return false;
           if (trimmed.includes('[')) return false;
@@ -133,6 +126,7 @@ const ChatbotInterface = () => {
           return true;
         })
       ]));
+
       const limited = merged.slice(0, 3);
       setSuggestedQuestions(limited.length ? limited : [
         "Tạo lộ trình cho developer",
@@ -145,7 +139,6 @@ const ChatbotInterface = () => {
     updateSuggestions();
   }, [messages]);
 
-  // Auto scroll xuống cuối khi có tin nhắn mới
   useEffect(() => {
     if (endOfMessagesRef.current) {
       endOfMessagesRef.current.scrollIntoView({ behavior: 'smooth' })
@@ -169,9 +162,7 @@ const ChatbotInterface = () => {
     try {
       const response = await fetch('http://127.0.0.1:5001/api/chatbot', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: message }),
       })
 
@@ -219,6 +210,41 @@ const ChatbotInterface = () => {
     ))
   }
 
+  const handlePlayTTS = async (message) => {
+    if (playingId === message.id) {
+      audioRef.current?.pause()
+      audioRef.current = null
+      setPlayingId(null)
+      return
+    }
+
+    try {
+      setPlayingId(message.id)
+      const res = await fetch("http://127.0.0.1:5001/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: message.content })
+      })
+      if (!res.ok) throw new Error("TTS API error")
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+      audioRef.current = new Audio(url)
+      audioRef.current.play()
+
+      audioRef.current.onended = () => {
+        setPlayingId(null)
+        audioRef.current = null
+      }
+    } catch (err) {
+      console.error("TTS error:", err)
+      setPlayingId(null)
+    }
+  }
+
   return (
     <div className="h-[600px] flex flex-col">
       <CardHeader className="pb-4">
@@ -232,7 +258,6 @@ const ChatbotInterface = () => {
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
-        {/* Suggested Questions */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
             <Lightbulb className="h-4 w-4" />
@@ -240,16 +265,12 @@ const ChatbotInterface = () => {
           </div>
           <div className="flex flex-wrap gap-2">
             {suggestedQuestions.map((question, index) => {
-              // Remove leading/trailing quotes and commas
               let clean = question;
               if (typeof clean === 'string') {
                 clean = clean.trim();
-                
                 clean = clean.replace(/,$/, '').trim();
-                // Remove all leading/trailing double quotes
                 while (clean.startsWith('"')) clean = clean.slice(1);
                 while (clean.endsWith('"')) clean = clean.slice(0, -1);
-
               }
               return (
                 <Badge
@@ -265,7 +286,6 @@ const ChatbotInterface = () => {
           </div>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 min-h-0">
           <ScrollArea className="h-full pr-4">
             <div className="space-y-4">
@@ -289,8 +309,21 @@ const ChatbotInterface = () => {
                         <User className="h-4 w-4 mt-1 text-white" />
                       )}
                       <div className="flex-1">
-                        <div className="text-sm font-medium mb-1">
-                          {message.type === 'bot' ? 'Chatbot' : 'Bạn'}
+                        <div className="text-sm font-medium mb-1 flex items-center justify-between">
+                          <span>{message.type === 'bot' ? 'Chatbot' : 'Bạn'}</span>
+                          {message.type === 'bot' && (
+                            <button
+                              onClick={() => handlePlayTTS(message)}
+                              className="ml-2 text-blue-600 hover:text-blue-800"
+                              title={playingId === message.id ? "Phát âm thanh" : "Dừng phát"}
+                            >
+                              {playingId === message.id ? (
+                                <Volume2 className="h-4 w-4" />
+                              ) : (
+                                <VolumeX className="h-4 w-4" />
+                              )}
+                            </button>
+                          )}
                         </div>
                         <div className="text-sm leading-relaxed">
                           {formatMessage(message.content)}
@@ -320,13 +353,11 @@ const ChatbotInterface = () => {
                 </div>
               )}
 
-              {/* Điểm đánh dấu cuối tin nhắn */}
               <div ref={endOfMessagesRef} />
             </div>
           </ScrollArea>
         </div>
 
-        {/* Input */}
         <div className="flex space-x-2">
           <Input
             value={inputValue}
